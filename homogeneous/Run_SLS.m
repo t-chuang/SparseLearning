@@ -9,6 +9,7 @@ lib.ratexp = 0;         % rational functions; r.^(-i)
 lib.chebyorder = 0;     % chebyshev polynomial of first kind
 lib.legorder = 0;       % legendre polynomial of first kind
 lib.cosker = 0;         % cosine kernel function; cos(pi*r/2), 0<r<1
+lambda = 0.01;          % threshold parameter for SLS
 
 % user prompts to create structure for our ODE system
 [N,d,tspan,L,M,phi,IC] = generateData();
@@ -39,7 +40,6 @@ for m = 1:M
 end
 
 % finds c the coefficient vector
-lambda = 0.01;      % manually set
 c = findC_SLS(tA,XA,dotX,d,N,L,M,psiLib,lambda);
 visualizeC(psiLib,c,lib,'');
 
