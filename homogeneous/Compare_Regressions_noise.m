@@ -2,14 +2,15 @@ close all; clear all; clc;
 Startup_AddPaths()
 
 % manual parameters to set
-lib.exporder = 10;       % exponent order; r.^i
-lib.usesine = 0;        % sine function; sin(i*r)
-lib.usecos = 0;         % cosine function; cos(i*r)
+lib.exporder = 5;       % exponent order; r.^i
+lib.usesine = 1;        % sine function; sin(i*r)
+lib.usecos = 1;         % cosine function; cos(i*r)
 lib.ratexp = 0;         % rational functions; r.^(-i) 
 lib.chebyorder = 0;     % chebyshev polynomial of first kind
 lib.legorder = 0;       % legendre polynomial of first kind
 lib.cosker = 0;         % cosine kernel function; cos(pi*r/2), 0<r<1
 lambda = 0.01;          % threshold parameter for SLS
+eta = 0.01;             % magnitude of noise to add to dotX
 
 % user prompts to create structure for our ODE system
 [N,d,tspan,L,M,phi,IC] = generateData();
@@ -28,6 +29,12 @@ for m = 1:M
     [tA, X] = ode15s(@(tA,X) RHS(tA,X,d,N,phi), tspan, y0{m}); % deval
     
     XA{m} = X;
+end
+
+% add noise
+for m = 1:M
+    noise{m} = 2*eta*rand(L,d*N)-eta;
+    XA{m} = XA{m} + noise{m};
 end
 
 % find dotX
@@ -85,14 +92,14 @@ if min(phi(0:0.01:IC.rmax)) ~= max(phi(0:0.01:IC.rmax))
 else
     bounds = [0 IC.rmax min(phi(0:0.01:IC.rmax))-1 min(phi(0:0.01:IC.rmax))+1];
 end 
-plotKernel(phi,cB,psiLib,bounds,'');  % LS is figure 1
-plotKernel(phi,cC,psiLib,bounds,'');  % Lasso is figure 2
-plotKernel(phi,cD,psiLib,bounds,'');  % Sequential LS is figure 3
+plotKernel(phi,cB,psiLib,bounds,'LS Kernel Comparison');  % LS is figure 1
+plotKernel(phi,cC,psiLib,bounds,'LASSO Kernel Comparison');  % Lasso is figure 2
+plotKernel(phi,cD,psiLib,bounds,'Sequential LS Kernel Comparison');  % Sequential LS is figure 3
 
-plotSystem_notitle(tA, XA, d, N, M, "", 'r');
-plotSystem_notitle(tB, XB, d, N, M, "", 'b');
-plotSystem_notitle(tC, XC, d, N, M, "", 'm');
-plotSystem_notitle(tD, XD, d, N, M, "", 'g');
+plotSystem(tA, XA, d, N, M, "True System", 'r');
+plotSystem(tB, XB, d, N, M, "Identified LS System", 'b');
+plotSystem(tC, XC, d, N, M, "Identified LASSO System", 'm');
+plotSystem(tD, XD, d, N, M, "Identified Sequential LS System", 'g');
 
 % error metric
 normtype = 2;                       % can edit; 1 for inf norm, 2 for L2 norm

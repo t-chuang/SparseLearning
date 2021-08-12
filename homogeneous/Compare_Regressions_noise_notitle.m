@@ -10,6 +10,7 @@ lib.chebyorder = 0;     % chebyshev polynomial of first kind
 lib.legorder = 0;       % legendre polynomial of first kind
 lib.cosker = 0;         % cosine kernel function; cos(pi*r/2), 0<r<1
 lambda = 0.01;          % threshold parameter for SLS
+eta = 0.01;             % magnitude of noise to add to dotX
 
 % user prompts to create structure for our ODE system
 [N,d,tspan,L,M,phi,IC] = generateData();
@@ -28,6 +29,12 @@ for m = 1:M
     [tA, X] = ode15s(@(tA,X) RHS(tA,X,d,N,phi), tspan, y0{m}); % deval
     
     XA{m} = X;
+end
+
+% add noise
+for m = 1:M
+    noise{m} = 2*eta*rand(L,d*N)-eta;
+    XA{m} = XA{m} + noise{m};
 end
 
 % find dotX
