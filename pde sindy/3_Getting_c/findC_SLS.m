@@ -19,3 +19,4 @@ for k=1:10
     c(bigindsc) = A(:,bigindsA)\b; 
 end
 end 
+

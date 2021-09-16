@@ -1,4 +1,4 @@
-function U = SPCC_Imp_solver(sysInfo, progressON)
+function U = SPCC_Imp_solver(sysInfo,progressON)
 %Use explicit SPCC to solve Nonlinear Fokker-Planck equation
 %% Extract the parameters
 dx = sysInfo.dx;
@@ -8,7 +8,6 @@ TN = sysInfo.TN;
 P = sysInfo.phi_kernel;
 U0 = sysInfo.U0;
 v = sysInfo.v;
-
 
 if progressON
     fs={'\b\b%d%%','\b\b\b%d%%'};%waitbar

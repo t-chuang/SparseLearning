@@ -2,7 +2,7 @@ function Gl = G(U,sysInfo,l,r,s)
 % G^l(r,s)
 % r and s here are index
 xgrid=sysInfo.xgrid;
-M=sysInfo.M+1;
+M=sysInfo.M+1; % number of space steps.
 temp={};
 for i=1:4
     temp{i}=[];

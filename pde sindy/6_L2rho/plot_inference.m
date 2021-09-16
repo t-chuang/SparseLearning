@@ -10,7 +10,7 @@ mid = sysInfo.mid;
 LW = 4;
 L = sysInfo.L;
 
-threshold = 0.01;
+threshold = 0.001;
 ind_temp = find(rho > threshold);
 ind_temp = ind_temp(end);
 rho_supp = xgrid(ind_temp);
@@ -22,5 +22,5 @@ set(fig,'defaultAxesColorOrder',[left_color; right_color]);
 
 yyaxis right
 fill([dx,dx:dx:L,L],[0 rho(mid+1:end)' 0],'k','EdgeColor','k','FaceColor',[0.5,0.5,0.5],'FaceAlpha',0.2);ylabel('\rho(r)')
-
+xlim([dx rho_supp]);    
 end

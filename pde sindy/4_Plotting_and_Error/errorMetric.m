@@ -1,4 +1,4 @@
-function error = errorMetric(normtype,c,psiLib,phi,rgrid)
+function error = errorMetric(normtype,c,psiLib,phi,rgrid,index)
 
 % create identified kernel
 n = length(psiLib);
@@ -9,11 +9,12 @@ for i = 1:n
 end
 
 % compute error depending on norm
+rgrid=rgrid(1:index);
 switch normtype
     case 1              % Linf norm
-        error = norm(abs(phi(rgrid)-phihat(rgrid)),inf);
+        error = norm(abs(phi(rgrid)-phihat(rgrid)),inf)/norm(abs(phi(rgrid)),inf);
     case 2              % L2 norm
-        error= norm(phi(rgrid)-phihat(rgrid),2);
+        error= norm(phi(rgrid)-phihat(rgrid),2)/norm(phi(rgrid),2);
 end
 
 

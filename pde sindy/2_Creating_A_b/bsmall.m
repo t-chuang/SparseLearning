@@ -1,12 +1,12 @@
-function b=bf(U,sysInfo,psiLib,progressON)
+function b=bsmall(U,sysInfo,psiLib,progressON,k)
 if progressON
     fs={'\b\b%d%%','\b\b\b%d%%'};%waitbar
-    fprintf('Generate stack vector b progress: 0%%');
+    fprintf('Generate stack vector bsmall progress: 0%%');
 end
 
 L=sysInfo.TN+1; % number of time grid points 
 b=[];
-for l=1:L
+for l=1:k:L
     b=[b;bl(U,sysInfo,psiLib,l)];
     if progressON
         j= floor(l/(L/100));

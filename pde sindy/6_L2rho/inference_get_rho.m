@@ -28,7 +28,7 @@ val   = mean(rho_t,2);
 ind     = find(val>threshold);
 assert(length(ind)>1);
 ind    = ind(end);
-rho_support = (-L + ind * dx);
+rho_support = (-L + (ind-1) * dx);
 
 %% rho with respect to radius
 % half = val(M/2+1:end);
