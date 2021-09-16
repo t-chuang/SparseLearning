@@ -38,7 +38,10 @@ IC.radius = 5;
 IC.rmax = 2*IC.radius;
 
 %%
-% create library
+% learning interval (T_L)
+T_L = floor(L/2);
+
+% creates library of n amount of functions psi
 psiLib = poolPsi(lib);
 
 % generates the data needed to construct our system
@@ -54,11 +57,18 @@ for m = 1:M
     XA{m} = X;
 end
 
+% take training interval from trajectory data
+tA_training = tA(1:T_L);
+
+for m = 1:M
+    XA_training{m} = XA{m}(1:T_L,:);
+end
+
 % find dotX
 for m = 1:M
-    XA1{m} = XA{m}(:,1:d*N{1});
-    XA2{m} = XA{m}(:,d*N{1}+1:d*(N{1}+N{2}));
-    for l = 1:L
+    XA1{m} = XA_training{m}(:,1:d*N{1});
+    XA2{m} = XA_training{m}(:,d*N{1}+1:d*(N{1}+N{2}));
+    for l = 1:T_L
         X_l1 = XA1{m}(l,:)';  % d*N{1} x 1
         X_l2 = XA2{m}(l,:)'; % d*N{2} x 1
         
@@ -73,21 +83,21 @@ end
 regtype = input('Regression type: 1 for LS, 2 for SLS, 3 for LASSO: ');
 switch regtype
     case 1
-        c11 = findC_LS(tA,XA1,XA1,dotX11,d,N{1},L,M,psiLib);
-        c12 = findC_LS(tA,XA1,XA2,dotX12,d,N{1},L,M,psiLib);
-        c21 = findC_LS(tA,XA2,XA1,dotX21,d,N{2},L,M,psiLib);
-        c22 = findC_LS(tA,XA2,XA2,dotX22,d,N{2},L,M,psiLib);
+        c11 = findC_LS(tA,XA1,XA1,dotX11,d,N{1},T_L,M,psiLib);
+        c12 = findC_LS(tA,XA1,XA2,dotX12,d,N{1},T_L,M,psiLib);
+        c21 = findC_LS(tA,XA2,XA1,dotX21,d,N{2},T_L,M,psiLib);
+        c22 = findC_LS(tA,XA2,XA2,dotX22,d,N{2},T_L,M,psiLib);
     case 2
         lambda = input('Lambda: ');
-        c11 = findC_SLS(tA,XA1,XA1,dotX11,d,N{1},L,M,psiLib,lambda);
-        c12 = findC_SLS(tA,XA1,XA2,dotX12,d,N{1},L,M,psiLib,lambda);
-        c21 = findC_SLS(tA,XA2,XA1,dotX21,d,N{2},L,M,psiLib,lambda);
-        c22 = findC_SLS(tA,XA2,XA2,dotX22,d,N{2},L,M,psiLib,lambda);
+        c11 = findC_SLS(tA,XA1,XA1,dotX11,d,N{1},T_L,M,psiLib,lambda);
+        c12 = findC_SLS(tA,XA1,XA2,dotX12,d,N{1},T_L,M,psiLib,lambda);
+        c21 = findC_SLS(tA,XA2,XA1,dotX21,d,N{2},T_L,M,psiLib,lambda);
+        c22 = findC_SLS(tA,XA2,XA2,dotX22,d,N{2},T_L,M,psiLib,lambda);
     case 3
-        c11 = findC_LASSO(tA,XA1,XA1,dotX11,d,N{1},L,M,psiLib);
-        c12 = findC_LASSO(tA,XA1,XA2,dotX12,d,N{1},L,M,psiLib);
-        c21 = findC_LASSO(tA,XA2,XA1,dotX21,d,N{2},L,M,psiLib);
-        c22 = findC_LASSO(tA,XA2,XA2,dotX22,d,N{2},L,M,psiLib);
+        c11 = findC_LASSO(tA,XA1,XA1,dotX11,d,N{1},T_L,M,psiLib);
+        c12 = findC_LASSO(tA,XA1,XA2,dotX12,d,N{1},T_L,M,psiLib);
+        c21 = findC_LASSO(tA,XA2,XA1,dotX21,d,N{2},T_L,M,psiLib);
+        c22 = findC_LASSO(tA,XA2,XA2,dotX22,d,N{2},T_L,M,psiLib);
 end     
 c = {c11, c12, c21, c22};
 
@@ -107,15 +117,19 @@ for m = 1:M
 end
 
 % plot the systems
-plotSystem(tA, XA, d, N, M, "True System");
-plotSystem(tB, XB, d, N, M, "Identified System");
+plotSystem(tA, XA, d, N, M, T_L, "True System");
+plotSystem(tB, XB, d, N, M, T_L, "Identified System");
 
 
 % find interval to evaluate on
-rspan1 = getrSpan(XA1,XA1,IC.rmax,d,N{1},L,M);
-rspan2 = getrSpan(XA1,XA2,IC.rmax,d,N{1},L,M);
-rspan3 = getrSpan(XA2,XA1,IC.rmax,d,N{2},L,M);
-rspan4 = getrSpan(XA2,XA2,IC.rmax,d,N{2},L,M);
+for m = 1:M
+    XA1r{m} = XA{m}(:,1:d*N{1});
+    XA2r{m} = XA{m}(:,d*N{1}+1:d*(N{1}+N{2}));
+end
+rspan1 = getrSpan(XA1r,XA1r,IC.rmax,d,N{1},L,M);
+rspan2 = getrSpan(XA1r,XA2r,IC.rmax,d,N{1},L,M);
+rspan3 = getrSpan(XA2r,XA1r,IC.rmax,d,N{2},L,M);
+rspan4 = getrSpan(XA2r,XA2r,IC.rmax,d,N{2},L,M);
 rspan = {rspan1, rspan2, rspan3, rspan4};
 
 % plots the true and approximated kernel as an error metric
