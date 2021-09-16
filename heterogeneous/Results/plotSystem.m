@@ -1,4 +1,4 @@
-function [] = plotSystem(t, X, d, N, M, ttl)
+function [] = plotSystem(t, X, d, N, M, T_L, ttl)
 % plots system depending on dimension
 
 %%
@@ -13,7 +13,7 @@ for m = 1:M
         figure
         title(strcat(ttl, ", m = ", num2str(m)));
         
-        IC = plot(0,X{m}(1,:),append(clr,'o')); % plot initial position as 'o'
+        training_interval = plot(t(T_L),X{m}(T_L,:),append(clr,'o')); % plot training inverval as 'o'
         hold on;
         
         for i = 1:N{1}        
@@ -37,7 +37,7 @@ for m = 1:M
         axis2.XTick = [];
         axis2.YTick = [];
         
-        IC = plot(axis1, X{m}(1,1:d:d*Ntotal), X{m}(1,2:d:d*Ntotal), 'o', 'MarkerSize', 3, 'MarkerEdgeColor', 'k', 'MarkerFaceColor', 'k');
+        training_interval = plot(axis1, X{m}(T_L,1:d:d*Ntotal), X{m}(T_L,2:d:d*Ntotal), 'o', 'MarkerSize', 3, 'MarkerEdgeColor', 'k', 'MarkerFaceColor', 'k');
         hold on;
         
         for i = 1:d:d*N{1}
@@ -53,8 +53,8 @@ for m = 1:M
         link = linkprop([axis1,axis2],{'XLim','YLim','ZLim','CameraUpVector','CameraPosition','CameraTarget'});
         setappdata(gcf, 'StoreTheLink', link);
         
-        clabels = {'0', 'tf'};
-        cticks = [0 t(length(t))];
+        clabels = {'0', 'T_L', 'T_f'};
+        cticks = [0 t(T_L) t(length(t))];
         
         colormap(axis1,'spring');
         cbar1 = colorbar(axis1, 'YTickLabel', clabels, 'YTick', cticks, 'AxisLocation', 'in', 'Position', [0.02 0.1095 0.0381 0.8167]);
@@ -76,7 +76,7 @@ for m = 1:M
         axis2.XTick = [];
         axis2.YTick = [];
         
-        IC = plot3(axis1, X{m}(1,1:d:d*Ntotal), X{m}(1,2:d:d*Ntotal), X{m}(1,3:d:d*Ntotal), 'o', 'MarkerSize', 3, 'MarkerEdgeColor', 'k', 'MarkerFaceColor', 'k');
+        training_interval = plot3(axis1, X{m}(T_L,1:d:d*Ntotal), X{m}(T_L,2:d:d*Ntotal), X{m}(T_L,3:d:d*Ntotal), 'o', 'MarkerSize', 3, 'MarkerEdgeColor', 'k', 'MarkerFaceColor', 'k');
         hold on;
         
         for i = 1:d:d*N{1}
@@ -91,8 +91,8 @@ for m = 1:M
         link = linkprop([axis1,axis2],{'XLim','YLim','ZLim','CameraUpVector','CameraPosition','CameraTarget'});
         setappdata(gcf, 'StoreTheLink', link);
 
-        clabels = {'0', 'tf'};
-        cticks = [0 t(length(t))];
+        clabels = {'0', 'T_L', 'T_f'};
+        cticks = [0 t(T_L) t(length(t))];
         
         colormap(axis1,'spring');
         cbar1 = colorbar(axis1, 'YTickLabel', clabels, 'YTick', cticks, 'AxisLocation', 'in', 'Position', [0.02 0.1095 0.0381 0.8167]);
