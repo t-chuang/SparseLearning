@@ -2,9 +2,9 @@ close all; clear all; clc;
 Startup_AddPaths()
 
 % manual parameters to set
-lib.exporder = 10;       % exponent order; r.^i
-lib.usesine = 0;        % sine function; sin(i*r)
-lib.usecos = 0;         % cosine function; cos(i*r)
+lib.exporder = 5;       % exponent order; r.^i
+lib.usesine = 1;        % sine function; sin(i*r)
+lib.usecos = 1;         % cosine function; cos(i*r)
 lib.ratexp = 0;         % rational functions; r.^(-i) 
 lib.chebyorder = 0;     % chebyshev polynomial of first kind
 lib.legorder = 0;       % legendre polynomial of first kind
@@ -13,6 +13,9 @@ lambda = 0.01;          % threshold parameter for SLS
 
 % user prompts to create structure for our ODE system
 [N,d,tspan,L,M,phi,IC] = generateData();
+
+% learning interval (T_L)
+T_L = floor(L/2);
 
 % creates library of n amount of functions psi
 psiLib = poolPsi(lib);
@@ -30,18 +33,25 @@ for m = 1:M
     XA{m} = X;
 end
 
+% take training interval from trajectory data
+tA_training = tA(1:T_L);
+
+for m = 1:M
+    XA_training{m} = XA{m}(1:T_L,:);
+end
+
 % find dotX
 for m = 1:M
-    for l = 1:L
-        X_l = XA{m}(l,:)';  % d*N x 1
+    for l = 1:T_L
+        X_l = XA_training{m}(l,:)';  % d*N x 1
         
-        dotX{m}(:,l) = RHS(tA(l),X_l,d,N,phi); % d*N x L
+        dotX{m}(:,l) = RHS(tA_training(l),X_l,d,N,phi); % d*N x L
     end
 end
 
 %%
 % Least squares
-cB = findC_LS(tA,XA,dotX,d,N,L,M,psiLib);
+cB = findC_LS(tA_training,XA_training,dotX,d,N,T_L,M,psiLib);
 visualizeC(psiLib,cB,lib,'Using Least Squares');
 
 % create identified system
@@ -54,7 +64,7 @@ end
 
 %%
 % Lasso
-cC = findC_LASSO(tA,XA,dotX,d,N,L,M,psiLib);
+cC = findC_LASSO(tA_training,XA_training,dotX,d,N,T_L,M,psiLib);
 visualizeC(psiLib,cC,lib,'Using Lasso');
 
 % create identified system
@@ -67,7 +77,7 @@ end
 
 %%
 % Sequential least squares
-cD = findC_SLS(tA,XA,dotX,d,N,L,M,psiLib,lambda);
+cD = findC_SLS(tA_training,XA_training,dotX,d,N,T_L,M,psiLib,lambda);
 visualizeC(psiLib,cD,lib,'Using Sequential Least Squares');
 
 % create identified system
@@ -80,23 +90,20 @@ end
 
 %%
 % plot and compare
-if min(phi(0:0.01:IC.rmax)) ~= max(phi(0:0.01:IC.rmax))
-    bounds = [0 IC.rmax min(phi(0:0.01:IC.rmax)) max(phi(0:0.01:IC.rmax))];  % [left right bottom top] bounds
-else
-    bounds = [0 IC.rmax min(phi(0:0.01:IC.rmax))-1 min(phi(0:0.01:IC.rmax))+1];
-end 
-plotKernel(phi,cB,psiLib,bounds,'');  % LS is figure 1
-plotKernel(phi,cC,psiLib,bounds,'');  % Lasso is figure 2
-plotKernel(phi,cD,psiLib,bounds,'');  % Sequential LS is figure 3
+rspan = getrSpan(XA,IC.rmax,d,N,L,M);
 
-plotSystem_notitle(tA, XA, d, N, M, "", 'r');
-plotSystem_notitle(tB, XB, d, N, M, "", 'b');
-plotSystem_notitle(tC, XC, d, N, M, "", 'm');
-plotSystem_notitle(tD, XD, d, N, M, "", 'g');
+plotKernel(phi,cB,psiLib,rspan,'');  % LS is figure 1
+plotKernel(phi,cC,psiLib,rspan,'');  % Lasso is figure 2
+plotKernel(phi,cD,psiLib,rspan,'');  % Sequential LS is figure 3
+
+plotSystem_notitle(tA, XA, d, N, M, T_L, 'r');
+plotSystem_notitle(tB, XB, d, N, M, T_L, 'b');
+plotSystem_notitle(tC, XC, d, N, M, T_L, 'm');
+plotSystem_notitle(tD, XD, d, N, M, T_L, 'g');
 
 % error metric
 normtype = 2;                       % can edit; 1 for inf norm, 2 for L2 norm
-rspan = 0:IC.rmax/100:IC.rmax;      % span of r to consider for kernel error
+
 ErrorLS = errorMetric(normtype,cB,psiLib,phi,rspan)
 ErrorLASSO = errorMetric(normtype,cC,psiLib,phi,rspan)
 ErrorSequentialLS = errorMetric(normtype,cD,psiLib,phi,rspan)

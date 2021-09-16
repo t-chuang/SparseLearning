@@ -5,15 +5,18 @@ Startup_AddPaths()
 lib.exporder = 5;       % exponent order; r.^i
 lib.usesine = 1;        % sine function; sin(i*r)
 lib.usecos = 1;         % cosine function; cos(i*r)
-lib.ratexp = 0;         % rational functions; r.^(-i) 
+lib.ratexp = 3;         % rational functions; r.^(-i) 
 lib.chebyorder = 0;     % chebyshev polynomial of first kind
 lib.legorder = 0;       % legendre polynomial of first kind
 lib.cosker = 0;         % cosine kernel function; cos(pi*r/2), 0<r<1
 lambda = 0.01;          % threshold parameter for SLS
-eta = 0.01;             % magnitude of noise to add to dotX
+eta = 0.01;             % noise magnitude
 
 % user prompts to create structure for our ODE system
 [N,d,tspan,L,M,phi,IC] = generateData();
+
+% learning interval (T_L)
+T_L = floor(L/2);
 
 % creates library of n amount of functions psi
 psiLib = poolPsi(lib);
@@ -31,24 +34,37 @@ for m = 1:M
     XA{m} = X;
 end
 
-% add noise
+% add noise to trajectory data
 for m = 1:M
-    noise{m} = 2*eta*rand(L,d*N)-eta;
-    XA{m} = XA{m} + noise{m};
+    noise = 2*eta*rand(size(XA{m}))-eta;
+    XA{m} = XA{m} + noise;
+end
+
+% take training interval from trajectory data
+tA_training = tA(1:T_L);
+
+for m = 1:M
+    XA_training{m} = XA{m}(1:T_L,:);
 end
 
 % find dotX
 for m = 1:M
-    for l = 1:L
-        X_l = XA{m}(l,:)';  % d*N x 1
+    for l = 1:T_L
+        X_l = XA_training{m}(l,:)';  % d*N x 1
         
-        dotX{m}(:,l) = RHS(tA(l),X_l,d,N,phi); % d*N x L
+        dotX{m}(:,l) = RHS(tA_training(l),X_l,d,N,phi); % d*N x L
     end
+end
+
+% add noise to dotX
+for m = 1:M
+    noise = 2*eta*rand(size(dotX{m}))-eta;
+    dotX{m} = dotX{m} + noise;
 end
 
 %%
 % Least squares
-cB = findC_LS(tA,XA,dotX,d,N,L,M,psiLib);
+cB = findC_LS(tA_training,XA_training,dotX,d,N,T_L,M,psiLib);
 visualizeC(psiLib,cB,lib,'Using Least Squares');
 
 % create identified system
@@ -61,7 +77,7 @@ end
 
 %%
 % Lasso
-cC = findC_LASSO(tA,XA,dotX,d,N,L,M,psiLib);
+cC = findC_LASSO(tA_training,XA_training,dotX,d,N,T_L,M,psiLib);
 visualizeC(psiLib,cC,lib,'Using Lasso');
 
 % create identified system
@@ -74,7 +90,7 @@ end
 
 %%
 % Sequential least squares
-cD = findC_SLS(tA,XA,dotX,d,N,L,M,psiLib,lambda);
+cD = findC_SLS(tA_training,XA_training,dotX,d,N,T_L,M,psiLib,lambda);
 visualizeC(psiLib,cD,lib,'Using Sequential Least Squares');
 
 % create identified system
@@ -87,23 +103,20 @@ end
 
 %%
 % plot and compare
-if min(phi(0:0.01:IC.rmax)) ~= max(phi(0:0.01:IC.rmax))
-    bounds = [0 IC.rmax min(phi(0:0.01:IC.rmax)) max(phi(0:0.01:IC.rmax))];  % [left right bottom top] bounds
-else
-    bounds = [0 IC.rmax min(phi(0:0.01:IC.rmax))-1 min(phi(0:0.01:IC.rmax))+1];
-end 
-plotKernel(phi,cB,psiLib,bounds,'LS Kernel Comparison');  % LS is figure 1
-plotKernel(phi,cC,psiLib,bounds,'LASSO Kernel Comparison');  % Lasso is figure 2
-plotKernel(phi,cD,psiLib,bounds,'Sequential LS Kernel Comparison');  % Sequential LS is figure 3
+rspan = getrSpan(XA,IC.rmax,d,N,L,M);
 
-plotSystem(tA, XA, d, N, M, "True System", 'r');
-plotSystem(tB, XB, d, N, M, "Identified LS System", 'b');
-plotSystem(tC, XC, d, N, M, "Identified LASSO System", 'm');
-plotSystem(tD, XD, d, N, M, "Identified Sequential LS System", 'g');
+plotKernel(phi,cB,psiLib,rspan,'LS Kernel Comparison');  % LS is figure 1
+plotKernel(phi,cC,psiLib,rspan,'LASSO Kernel Comparison');  % Lasso is figure 2
+plotKernel(phi,cD,psiLib,rspan,'Sequential LS Kernel Comparison');  % Sequential LS is figure 3
+
+plotSystem(tA, XA, d, N, M, T_L, "True System", 'r');
+plotSystem(tB, XB, d, N, M, T_L, "Identified LS System", 'b');
+plotSystem(tC, XC, d, N, M, T_L, "Identified LASSO System", 'm');
+plotSystem(tD, XD, d, N, M, T_L, "Identified Sequential LS System", 'g');
 
 % error metric
 normtype = 2;                       % can edit; 1 for inf norm, 2 for L2 norm
-rspan = 0:IC.rmax/100:IC.rmax;      % span of r to consider for kernel error
+
 ErrorLS = errorMetric(normtype,cB,psiLib,phi,rspan)
 ErrorLASSO = errorMetric(normtype,cC,psiLib,phi,rspan)
 ErrorSequentialLS = errorMetric(normtype,cD,psiLib,phi,rspan)
