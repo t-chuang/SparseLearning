@@ -1,4 +1,4 @@
-function [] = plotSystem(t, X, d, N, M, ttl, clr)
+function [] = plotSystem(t, X, d, N, M, T_L, ttl, clr)
 % plots system depending on dimension
 
 %%
@@ -7,17 +7,17 @@ function [] = plotSystem(t, X, d, N, M, ttl, clr)
 for m = 1:M
     if d == 1
         figure
-        IC = plot(0,X{m}(1,:),append(clr,'o')); % plot initial position as 'o'
+        training_interval = plot(t(T_L),X{m}(T_L,:),append(clr,'o')); % plot end of learning interval
         hold on;
         for i = 1:N        
             traj = plot(t,X{m}(:,i),append(clr,'-'));
         end
         title(strcat(ttl, ", m = ", num2str(m)));
-        legend([IC(1), traj(1)],{'IC', 'trajectory'});
+        legend([training_interval(1), traj(1)],{'learning end', 'trajectory'});
         hold off;
     elseif d == 2
         figure
-        IC = plot(X{m}(1,1:d:d*N), X{m}(1,2:d:d*N), 'o', 'MarkerSize', 3, 'MarkerEdgeColor', 'k', 'MarkerFaceColor', 'k');
+        training_interval = plot(X{m}(T_L,1:d:d*N), X{m}(T_L,2:d:d*N), 'o', 'MarkerSize', 3, 'MarkerEdgeColor', 'k', 'MarkerFaceColor', 'k');
         hold on;
         for j = 1:d:d*N
             colormap('winter');
@@ -25,14 +25,14 @@ for m = 1:M
             set(traj, 'EdgeAlpha', 0.5);
         end
         title(strcat(ttl, ", m = ", num2str(m)));
-        clabels = {'0', 'tf'};
-        cticks = [0 t(length(t))];
+        clabels = {'0', 'T_L', 'T_f'};
+        cticks = [0 t(T_L) t(length(t))];
         cbar = colorbar('YTickLabel', clabels, 'YTick', cticks, 'Location', 'Eastoutside');
         set(cbar, 'FontSize', 15);
         hold off;
     else
         figure
-        IC = plot3(X{m}(1,1:d:d*N), X{m}(1,2:d:d*N), X{m}(1,3:d:d*N), 'o', 'MarkerSize', 3, 'MarkerEdgeColor', 'k', 'MarkerFaceColor', 'k');
+        training_interval = plot3(X{m}(T_L,1:d:d*N), X{m}(T_L,2:d:d*N), X{m}(T_L,3:d:d*N), 'o', 'MarkerSize', 3, 'MarkerEdgeColor', 'k', 'MarkerFaceColor', 'k');
         hold on;
         for j = 1:d:d*N
             colormap('winter');
@@ -40,8 +40,8 @@ for m = 1:M
             set(traj, 'EdgeAlpha', 0.5);
         end
         title(strcat(ttl, ", m = ", num2str(m)));
-        clabels = {'0', 'tf'};
-        cticks = [0 t(length(t))];
+        clabels = {'0', 'T_L', 'T_f'};
+        cticks = [0 t(T_L) t(length(t))];
         cbar = colorbar('YTickLabel', clabels, 'YTick', cticks, 'Location', 'Eastoutside');
         set(cbar, 'FontSize', 15);
         hold off;
