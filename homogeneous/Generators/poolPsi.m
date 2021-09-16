@@ -31,7 +31,7 @@ end
 % rational numbers
 if lib.ratexp ~= 0
     for i = 1:lib.ratexp
-        psiLib{:,ind} = @(r) r.^(-i);
+        psiLib{:,ind} = @(r) (r+eps).^(-i);
         ind = ind+1;
     end
 end
