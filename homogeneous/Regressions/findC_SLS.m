@@ -1,5 +1,6 @@
 function c = findC_SLS(tA,XA,dotX,d,N,L,M,psiLib,lambda)
 % compute Sparse regression: sequential least squares
+% modified from SLS code by Brunton et. al.                                                                                                                                                                 
 
 c = findC_LS(tA,XA,dotX,d,N,L,M,psiLib);  % initial guess: Least-squares
 
