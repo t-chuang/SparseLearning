@@ -63,9 +63,9 @@ for m = 1:M
 end
 
 %%
-% Lasso
-cC = findC_LASSO(tA_training,XA_training,dotX,d,N,T_L,M,psiLib);
-visualizeC(psiLib,cC,lib,'Using Lasso');
+% Sequential least squares
+cC = findC_SLS(tA_training,XA_training,dotX,d,N,T_L,M,psiLib,lambda);
+visualizeC(psiLib,cC,lib,'Using Sequential Least Squares');
 
 % create identified system
 for m = 1:M
@@ -76,9 +76,9 @@ for m = 1:M
 end
 
 %%
-% Sequential least squares
-cD = findC_SLS(tA_training,XA_training,dotX,d,N,T_L,M,psiLib,lambda);
-visualizeC(psiLib,cD,lib,'Using Sequential Least Squares');
+% Lasso
+cD = findC_LASSO(tA_training,XA_training,dotX,d,N,T_L,M,psiLib);
+visualizeC(psiLib,cD,lib,'Using Lasso');
 
 % create identified system
 for m = 1:M
@@ -93,17 +93,22 @@ end
 rspan = getrSpan(XA,IC.rmax,d,N,L,M);
 
 plotKernel(phi,cB,psiLib,rspan,'LS Kernel Comparison');  % LS is figure 1
-plotKernel(phi,cC,psiLib,rspan,'LASSO Kernel Comparison');  % Lasso is figure 2
-plotKernel(phi,cD,psiLib,rspan,'Sequential LS Kernel Comparison');  % Sequential LS is figure 3
+plotKernel(phi,cC,psiLib,rspan,'Sequential LS Kernel Comparison');  % Sequential LS is figure 2
+plotKernel(phi,cD,psiLib,rspan,'LASSO Kernel Comparison');  % Lasso is figure 3
 
 plotSystem(tA, XA, d, N, M, T_L, "True System", 'r');
 plotSystem(tB, XB, d, N, M, T_L, "Identified LS System", 'b');
-plotSystem(tC, XC, d, N, M, T_L, "Identified LASSO System", 'm');
-plotSystem(tD, XD, d, N, M, T_L, "Identified Sequential LS System", 'g');
+plotSystem(tC, XC, d, N, M, T_L, "Identified Sequential LS System", 'm');
+plotSystem(tD, XD, d, N, M, T_L, "Identified LASSO System", 'g');
+
 
 % error metric
 normtype = 2;                       % can edit; 1 for inf norm, 2 for L2 norm
 
-ErrorLS = errorMetric(normtype,cB,psiLib,phi,rspan)
-ErrorLASSO = errorMetric(normtype,cC,psiLib,phi,rspan)
-ErrorSequentialLS = errorMetric(normtype,cD,psiLib,phi,rspan)
+Ker_ErrorLS = errorKer(normtype,cB,psiLib,phi,rspan)
+Ker_ErrorSequentialLS = errorKer(normtype,cC,psiLib,phi,rspan)
+Ker_ErrorLASSO = errorKer(normtype,cD,psiLib,phi,rspan)
+
+Traj_ErrorLS = errorTraj(XA,XB,d,N,L,M)
+Traj_ErrorSequentialLS = errorTraj(XA,XC,d,N,L,M)
+Traj_ErrorLASSO = errorTraj(XA,XD,d,N,L,M)

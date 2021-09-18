@@ -84,5 +84,5 @@ plotKernel(phi,c,psiLib,rspan,'Kernel Comparison');
 
 % error metric
 normtype = 2;       % can edit; 1 for inf norm, 2 for L2 norm
-error = errorMetric(normtype,c,psiLib,phi,rspan)
-
+kernel_error = errorKer(normtype,c,psiLib,phi,rspan)
+trajectory_error = errorTraj(XA,XB,d,N,L,M)
