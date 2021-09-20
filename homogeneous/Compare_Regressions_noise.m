@@ -34,12 +34,6 @@ for m = 1:M
     XA{m} = X;
 end
 
-% add noise to trajectory data
-for m = 1:M
-    noise = 2*eta*rand(size(XA{m}))-eta;
-    XA{m} = XA{m} + noise;
-end
-
 % take training interval from trajectory data
 tA_training = tA(1:T_L);
 
@@ -109,6 +103,12 @@ plotKernel(phi,cB,psiLib,rspan,'LS Kernel Comparison');  % LS is figure 1
 plotKernel(phi,cC,psiLib,rspan,'Sequential LS Kernel Comparison');  % Sequential LS is figure 2
 plotKernel(phi,cD,psiLib,rspan,'LASSO Kernel Comparison');  % Lasso is figure 3
 
+
+% add noise to trajectory data for visual
+for m = 1:M
+    noise = 2*eta*rand(size(XA{m}))-eta;
+    XA{m} = XA{m} + noise;
+end
 plotSystem(tA, XA, d, N, M, T_L, "True System", 'r');
 plotSystem(tB, XB, d, N, M, T_L, "Identified LS System", 'b');
 plotSystem(tC, XC, d, N, M, T_L, "Identified Sequential LS System", 'm');

@@ -5,7 +5,7 @@ Startup_AddPaths()
 lib.exporder = 5;       % exponent order; r.^i
 lib.usesine = 1;        % sine function; sin(i*r)
 lib.usecos = 1;         % cosine function; cos(i*r)
-lib.ratexp = 0;         % rational functions; r.^(-i) 
+lib.ratexp = 3;         % rational functions; r.^(-i) 
 lib.chebyorder = 0;     % chebyshev polynomial of first kind
 lib.legorder = 0;       % legendre polynomial of first kind
 lib.cosker = 0;         % cosine kernel function; cos(pi*r/2), 0<r<1
@@ -32,12 +32,6 @@ for m = 1:M
     [tA, X] = ode15s(@(tA,X) RHS(tA,X,d,N,phi), tspan, y0{m}); % deval
     
     XA{m} = X;
-end
-
-% add noise to trajectory data
-for m = 1:M
-    noise = 2*eta*rand(size(XA{m}))-eta;
-    XA{m} = XA{m} + noise;
 end
 
 % take training interval from trajectory data
@@ -109,6 +103,11 @@ plotKernel(phi,cB,psiLib,rspan,'');  % LS is figure 1
 plotKernel(phi,cC,psiLib,rspan,'');  % Sequential LS is figure 2
 plotKernel(phi,cD,psiLib,rspan,'');  % Lasso is figure 3
 
+% add noise to trajectory data for visual
+for m = 1:M
+    noise = 2*eta*rand(size(XA{m}))-eta;
+    XA{m} = XA{m} + noise;
+end
 plotSystem_notitle(tA, XA, d, N, M, T_L, 'r');
 plotSystem_notitle(tB, XB, d, N, M, T_L, 'b');
 plotSystem_notitle(tC, XC, d, N, M, T_L, 'm');
