@@ -11,21 +11,10 @@ all_dir = add_path_create_dir();
 %% load specified parameters
 sysInfo = settings_DEs(1);
 display_sysInfo(sysInfo);
-% %% sysInfo settings (optional)
-% sysInfo.L = 10;   
-% sysInfo.M = 30;
-% sysInfo.T = 1;
-% sysInfo.dt = 0.1;
-% sysInfo.Initial = 'DN_1_0.5';
-% sysInfo.nlfn = 'power_3';
-% sysInfo.v = 1;
-% sysInfo = get_sysInfo_details(sysInfo);
-
-%sysInfo.phi_kernel= @(x) exp(x);         % setting kernel by ourself if don't want to use the kernel in Lang and Lu's paper
 
 %%
 % manual parameters of library (basis of hypothesis space)to set
-lib.exporder = 10;       % exponent order; r.^i
+lib.exporder =10;       % exponent order; r.^i
 lib.usesine = 5;        % sine function; sin(i*r)
 lib.usecos = 5;         % cosine function; cos(i*r)
 lib.ratexp = 0;         % rational functions; r.^(-i) 
@@ -37,22 +26,15 @@ lib.cosker = 0;         % cosine kernel function; cos(pi*r/2), 0<r<1
 fprintf(['Generate data U with M = ', num2str(sysInfo.M),'...\n'])
 U = generate_data(sysInfo, all_dir, 1);
 plot_U(U, sysInfo, all_dir, 1);
+shading interp;
 %% setting the library
 psiLib = poolPsi(lib);
-psiLib
 %% create the stack matrix A and stack vector b
-smallData=1;   % whether use small data or not 
-switch smallData
-    case 0
-        A=Af(U,sysInfo,psiLib,1);
-        b=bf(U,sysInfo,psiLib,1);
-    case 1
-        A=Asmall(U,sysInfo,psiLib,1,20);
-        b=bsmall(U,sysInfo,psiLib,1,20);
-        
-end 
+A=Af(U,sysInfo,psiLib,1);
+b=bf(U,sysInfo,psiLib,1);
+    
 %% get the vector c=A\b
-c1=A\b;                 % back slash will automatically implement Least Square method
+c1=findC_LS(A,b);                 
 c2=findC_SLS(A,b,0.01);
 c3=findC_LASSO(A,b);
 disp('Using LS');
@@ -64,12 +46,12 @@ visualizeC(psiLib,c3,lib);
 %% rho
 threshold=0.001;
 sysInfo.rho=inference_get_rho(sysInfo,U,threshold);
-%% plot true and identified kernel
-bounds=max(sysInfo.rgrid); % domain of kernel
-%bounds=sysInfo.rho.support;
+%% plot true and identified kernel and rho
+%bounds=max(sysInfo.rgrid); % domain of kernel
+bounds=sysInfo.rho.support;   % learning interval
 figure
 phi=sysInfo.phi_kernel; % true kernel
-plotKernel(phi,c1,c2,c3,psiLib,bounds);
+plotKernel(phi,c1,c2,c3,psiLib,bounds,sysInfo);
 
 %% error metric 
 rgrid=sysInfo.rgrid;
@@ -87,11 +69,11 @@ fprintf('L-infinity LASSO relative error = %2.2f%% \n', errolas);
 normtype=2;
 disp('L-2 norm');
 errols2  =errorMetric(normtype,c1,psiLib,phi,rgrid,index)
-fprintf('L2 LS relative error = %2.2f%% \n', errols);
+fprintf('L2 LS relative error = %2.2f%% \n', errols2);
 errosls2 =errorMetric(normtype,c2,psiLib,phi,rgrid,index)
-fprintf('L2 SLS relative error = %2.2f%% \n', errosls);
+fprintf('L2 SLS relative error = %2.2f%% \n', errosls2);
 errolas2 =errorMetric(normtype,c3,psiLib,phi,rgrid,index)
-fprintf('L2 LASSO relative error = %2.2f%% \n', errolas);
+fprintf('L2 LASSO relative error = %2.2f%% \n', errolas2);
 %% relative error
 disp('L2 rho norm');
 L2rhols  =evaluation_error(sysInfo,c1,psiLib)
@@ -101,5 +83,12 @@ fprintf('L2 rho SLS relative error = %2.2f%% \n', L2rhosls);
 L2rholas =evaluation_error(sysInfo,c3,psiLib)
 fprintf('L2 rho LASSO relative error = %2.2f%% \n', L2rholas);
 
-%% plot rho function
-plot_inference(sysInfo);
+%% Wasserstein distance
+new_initial = 'DN_2_0.5';
+ws_dist = evaluation_Wasserstein_distance(sysInfo, psiLib,c3, U, new_initial);
+plot_Wasserstein_distance(ws_dist, sysInfo, all_dir, 0);
+
+%% Free energy
+free_Engy = evaluation_Free_energy(sysInfo, c3,psiLib, U);
+plot_Free_energy(free_Engy, sysInfo, all_dir, 0);
+

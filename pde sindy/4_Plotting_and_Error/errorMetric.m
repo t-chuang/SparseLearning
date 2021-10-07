@@ -9,7 +9,7 @@ for i = 1:n
 end
 
 % compute error depending on norm
-rgrid=rgrid(1:index);
+rgrid=rgrid(2:index);
 switch normtype
     case 1              % Linf norm
         error = norm(abs(phi(rgrid)-phihat(rgrid)),inf)/norm(abs(phi(rgrid)),inf);

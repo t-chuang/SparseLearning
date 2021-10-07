@@ -84,7 +84,7 @@ switch class_name
             W_val = get_potential_AB_cut(xgrid, A, B, threshold, dx);
             temp = fit(xgrid', W_val' ,'spline');
             W = @(x) reshape(temp(x), size(x));
-            %                     figure;fplot(W)
+%                                  figure;fplot(dW);
             Phi_potential = W;
             phi_kernel = dW;
         end
